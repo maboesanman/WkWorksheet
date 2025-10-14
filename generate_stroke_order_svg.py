@@ -146,7 +146,7 @@ def count_strokes(node: Element) -> int:
             total += count_strokes(child)
     return total
 
-def make_phase_svgs(tree, phase_starts, outdir: Path, kanji: str):
+def make_phase_svgs(tree, phase_starts, outdir: Path, kanji: str, num: int):
     """
     For each phase in `phase_starts`:
       - keep only the paths belonging to that phase,
@@ -197,6 +197,27 @@ def make_phase_svgs(tree, phase_starts, outdir: Path, kanji: str):
         out_path = outdir / f"{kanji}-{i+1:02d}.svg"
         tcopy.write(str(out_path), encoding="utf-8", xml_declaration=True)
         print("→ wrote", out_path)
+    
+    for i in range(len(phase_starts), num):
+        tcopy = deepcopy(tree)
+        r2 = tcopy.getroot()
+        paths = r2.xpath(".//svg:g[starts-with(@id,'kvg:StrokePaths_')]//svg:path", namespaces=NS)
+        texts = r2.xpath(".//svg:g[starts-with(@id,'kvg:StrokeNumbers_')]//svg:text", namespaces=NS)
+
+        # Remove paths outside [0,end)
+        for idx, p in enumerate(paths):
+            p.getparent().remove(p)
+
+        # Remove numbers outside [start,end)
+        for idx, t in enumerate(texts):
+            t.getparent().remove(t)
+
+        # Remove empty groups but keep text-only groups
+        _clean_empty_groups_keep_text(r2)
+
+        out_path = outdir / f"{kanji}-{i+1:02d}.svg"
+        tcopy.write(str(out_path), encoding="utf-8", xml_declaration=True)
+        print("→ wrote", out_path)
 
 
 def _clean_empty_groups_keep_text(node):
@@ -222,7 +243,7 @@ def main():
 
     root = get_kanji_root(tree, kanji)
 
-    make_phase_svgs(tree, compute_phase_starts(root, int(sys.argv[2])), Path(sys.argv[3]), kanji)
+    make_phase_svgs(tree, compute_phase_starts(root, int(sys.argv[2])), Path(sys.argv[3]), kanji, int(sys.argv[2]))
 
     print(tree)
 

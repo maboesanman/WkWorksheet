@@ -24,6 +24,12 @@
 \setmainfont{Noto Serif}
 \setCJKmainfont{Noto Serif CJK JP}
 
+\newCJKfontfamily\KanjiFont[
+  Path=fonts/,          % folder containing your .ttf
+  Extension=.ttf,       % file extension
+  UprightFont=*         % load “MyKanjiFont.ttf” → replaces *
+]{AiharaHudemojiKaisho_601}
+
 % --- headers / footers ---
 \pagestyle{fancy}
 \fancyhf{}  % clear all
@@ -42,20 +48,64 @@
 
 % \KanjiGrid{<cell size mm>}{<rows>}
 \newcommand{\KanjiGrid}[3]{%
-  \begin{tikzpicture}[x=#1, y=#1, line join=round, line cap=round]
+  \begin{tikzpicture}[x=-#1, y=-#1, line join=round, line cap=round]
     % Convert arguments to numeric TikZ variables
     \pgfmathsetmacro{\cellsize}{#1}
-    \pgfmathtruncatemacro{\rows}{#2}
+    \pgfmathtruncatemacro{\rows}{#2+3}
+
+    \draw[black] (0, 0) rectangle (1, 1);
+    \draw[lightgray] (0, 0.5) -- (1, 0.5);
+    \draw[lightgray] (0.5, 0) -- (0.5, 1);
+    \node[anchor=center] at (0.5, 0.5){
+      \KanjiFont
+      {\fontsize{\fpeval{0.88*(#1/1pt)}}{\fpeval{0.88*1.2*(#1/1pt)}}\selectfont #3}
+    };
+
+
+    \draw[black] (0, 1) rectangle (1, 3);
+    \draw[lightgray] (0, 1.5) -- (1, 1.5);
+    \draw[lightgray] (0, 2.0) -- (1, 2.0);
+    \draw[lightgray] (0, 2.5) -- (1, 2.5);
+    \draw[lightgray] (0.5, 1) -- (0.5, 3);
+    \node[anchor=center] at (0.25, 1.25){
+      \strokeOrder{#3}{1}{\dimexpr#1/2\relax}
+    };
+    \node[anchor=center] at (0.25, 1.75){
+      \strokeOrder{#3}{2}{\dimexpr#1/2\relax}
+    };
+    \node[anchor=center] at (0.25, 2.25){
+      \strokeOrder{#3}{3}{\dimexpr#1/2\relax}
+    };
+    \node[anchor=center] at (0.25, 2.75){
+      \strokeOrder{#3}{4}{\dimexpr#1/2\relax}
+    };
+    \node[anchor=center] at (0.75, 1.25){
+      \strokeOrder{#3}{5}{\dimexpr#1/2\relax}
+    };
+    \node[anchor=center] at (0.75, 1.75){
+      \strokeOrder{#3}{6}{\dimexpr#1/2\relax}
+    };
+    \node[anchor=center] at (0.75, 2.25){
+      \strokeOrder{#3}{7}{\dimexpr#1/2\relax}
+    };
+    \node[anchor=center] at (0.75, 2.75){
+      \strokeOrder{#3}{8}{\dimexpr#1/2\relax}
+    };
+
+    
+
 
     % boxes:
-    \foreach \y in {1,...,\rows} {
+    \foreach \y in {4,...,\rows} {
       \draw[lightgray] (0, \y-0.5) -- (1, \y-0.5);
       \draw[lightgray] (0.5, \y-1) -- (0.5, \y);
       \draw[black] (0, \y-1) rectangle (1, \y);
-      % \node[font=\Huge, anchor=center] at (0.5, \y-0.5) {字};
-      \node[anchor=center] at (0.5, \y-0.5){
-        \strokeOrder{#3}{\y}{#1}
-        % \includesvg[width=#1,height=#1,keepaspectratio]{out/#3-01.svg}
+    }
+
+    \foreach \y in {4,...,6} {
+      \node[anchor=center, text=gray!25] at (0.5, \y-0.5){
+        \KanjiFont
+        {\fontsize{\fpeval{0.88*(#1/1pt)}}{\fpeval{0.88*1.2*(#1/1pt)}}\selectfont #3}
       };
     }
   \end{tikzpicture}%
@@ -64,11 +114,26 @@
 % --- document body ---
 \begin{document}
 
+
 % \newlength{\contentwidth}
 % \newlength{\contentheight}
 % \setlength{\contentwidth}{\textwidth}
 % \setlength{\contentheight}{\textheight}
 
-\KanjiGrid{12mm}{8}{豚}
+\KanjiGrid{12mm}{15}{必}
+\KanjiGrid{12mm}{15}{医}
+\KanjiGrid{12mm}{15}{対}
+\KanjiGrid{12mm}{15}{局}
+\KanjiGrid{12mm}{15}{役}
+\KanjiGrid{12mm}{15}{投}
+\KanjiGrid{12mm}{15}{次}
+% \KanjiGrid{12mm}{15}{決}
+% \KanjiGrid{12mm}{15}{番}
+% \KanjiGrid{12mm}{15}{究}
+% \KanjiGrid{12mm}{15}{絵}
+% \KanjiGrid{12mm}{15}{買}
+% \KanjiGrid{12mm}{15}{身}
+% \KanjiGrid{12mm}{15}{道}
+% \KanjiGrid{12mm}{15}{間}
 
 \end{document}
