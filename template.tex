@@ -1,0 +1,74 @@
+\documentclass[12pt,b5paper]{article}
+
+% --- core packages ---
+\usepackage{geometry}
+\usepackage{fontspec}
+\usepackage{xeCJK}     % proper Japanese text handling
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage[inkscapearea=page]{svg}
+
+\svgsetup{inkscapearea=page}
+
+% --- page geometry (B5 = 182 × 257 mm) ---
+\geometry{
+  paperwidth=182mm,
+  paperheight=257mm,
+  top=15mm,
+  bottom=15mm,
+  inner=15mm,
+  outer=10mm
+}
+
+% --- fonts ---
+\setmainfont{Noto Serif}
+\setCJKmainfont{Noto Serif CJK JP}
+
+% --- headers / footers ---
+\pagestyle{fancy}
+\fancyhf{}  % clear all
+\fancyhead[L]{\textbf{漢字練習}}
+\fancyhead[R]{\today}
+\fancyfoot[C]{-- \thepage\ --}
+
+\usepackage{tikz}
+
+\newcommand{\strokeOrder}[3]{
+  \IfFileExists{out/#1-0#2.svg}{}{
+    \immediate\write18{python3 generate_stroke_order_svg.py #1 8 out}
+  }
+  \includesvg[width=#3,height=#3,keepaspectratio]{out/#1-0#2.svg}
+}
+
+% \KanjiGrid{<cell size mm>}{<rows>}
+\newcommand{\KanjiGrid}[3]{%
+  \begin{tikzpicture}[x=#1, y=#1, line join=round, line cap=round]
+    % Convert arguments to numeric TikZ variables
+    \pgfmathsetmacro{\cellsize}{#1}
+    \pgfmathtruncatemacro{\rows}{#2}
+
+    % boxes:
+    \foreach \y in {1,...,\rows} {
+      \draw[lightgray] (0, \y-0.5) -- (1, \y-0.5);
+      \draw[lightgray] (0.5, \y-1) -- (0.5, \y);
+      \draw[black] (0, \y-1) rectangle (1, \y);
+      % \node[font=\Huge, anchor=center] at (0.5, \y-0.5) {字};
+      \node[anchor=center] at (0.5, \y-0.5){
+        \strokeOrder{#3}{\y}{#1}
+        % \includesvg[width=#1,height=#1,keepaspectratio]{out/#3-01.svg}
+      };
+    }
+  \end{tikzpicture}%
+}
+
+% --- document body ---
+\begin{document}
+
+% \newlength{\contentwidth}
+% \newlength{\contentheight}
+% \setlength{\contentwidth}{\textwidth}
+% \setlength{\contentheight}{\textheight}
+
+\KanjiGrid{12mm}{8}{豚}
+
+\end{document}

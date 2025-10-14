@@ -1,0 +1,9 @@
+{
+  "name": "Kanji LaTeX",
+  "build": { "dockerfile": "../Dockerfile" },
+  "customizations": {
+    "vscode": {
+      "extensions": ["james-yu.latex-workshop"]
+    }
+  }
+}
