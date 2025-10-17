@@ -1,4 +1,14 @@
 
+
+
+\newlength{\gridsize}
+\newlength{\wordbankminheight}
+
+\newcommand{\WKLevel}{8}
+\newcommand{\WKUsername}{maboesanman}
+\setlength{\gridsize}{11.5mm}
+\setlength{\wordbankminheight}{40mm}
+
 \documentclass[10pt, twoside]{article}
 \usepackage{geometry, fancyhdr, fontspec, xeCJK, xfp, graphicx, multicol, needspace}
 \usepackage[calc]{datetime2}
@@ -190,7 +200,7 @@
 \fancyhead[LO]{\scalebox{0.8}{\Mincho ブウマン·マソン}}
 \fancyhead[RO]{\scalebox{0.8}{\Gothic\DTMtoday}}
 \fancyhead[LE]{\scalebox{0.8}{\Gothic ワニカニレベル\lookup{\DTMtwodigits{\WKLevel}}}}
-% \fancyhead[RE]{\scalebox{0.8}{\Sans \WKUsername}}
+\fancyhead[RE]{\scalebox{0.8}{\Sans \WKUsername}}
 \fancyfoot[C]{}
 
 
@@ -334,3 +344,63 @@
 \newcommand\blankpage{\clearpage\mbox{}}% EMPTY EXTRA PAGE IF NEEDED
 \immediate\write16{KANJI_COUNT_PER_PAGE=\the\gridwidth}
 
+\begin{document}
+  \null
+  \newpage
+  \KanjiGrid{}
+  \begin{kanjientries}{2}
+    \begin{level}{8}
+      \kanjientry{次}{\wkread{ジ}·シ·つぎ·つ}{Next}
+      \kanjientry{支}{\wkread{シ}·ささ}{Support}
+      \kanjientry{住}{\wkread{ジュウ}·す}{Dwell}
+      \kanjientry{医}{\wkread{イ}}{Medicine}
+      \kanjientry{対}{\wkread{タイ}}{Versus}
+      \kanjientry{局}{\wkread{キョク}}{Bureau}
+      \kanjientry{役}{\wkread{ヤク}·エキ}{Service}
+      \kanjientry{投}{\wkread{トウ}·な}{Throw}
+      \kanjientry{決}{\wkread{ケツ}·き}{Decide}
+      \kanjientry{究}{\wkread{キュウ}·きわ}{Research}
+      \kanjientry{身}{\wkread{シン}·み}{Somebody}
+    \end{level}
+  \end{kanjientries}
+
+% \KanjiGrid{森,朝,番,答,絵,買,道,間,雲,数,画,必,強,歩}
+% \begin{kanjientries}
+%   \begin{level}{8}
+%     \kanjientry{森}{シン·\wkread{もり}}{Forest}
+%     \kanjientry{朝}{チョウ·\wkread{あさ}}{Morning}
+%     \kanjientry{番}{\wkread{バン}·つが·つがい}{Number In A Series}
+%     \kanjientry{答}{トウ·\wkread{こた}}{Answer}
+%     \kanjientry{絵}{\wkread{エ}}{Picture}
+%     \kanjientry{買}{バイ·\wkread{か}}{Buy}
+%     \kanjientry{道}{\wkread{ドウ}·みち}{Road}
+%     \kanjientry{間}{\wkread{カン}·ケン·あいだ·ま}{Interval}
+%     \kanjientry{雲}{ウン·\wkread{くも}}{Cloud}
+%     \kanjientry{数}{\wkread{スウ}·かぞ·かず}{Count}
+%   \end{level}
+%   \begin{level}{7}
+%     \kanjientry{画}{\wkread{ガ}·カク}{Image}
+%     \kanjientry{必}{\wkread{ヒツ}·かなら}{Certain}
+%     \kanjientry{強}{\wkread{キョウ}·ゴウ·つよ}{Strong}
+%   \end{level}
+%   \begin{level}{6}
+%     \kanjientry{歩}{\wkread{ホ}·ある·あゆ}{Walk}
+%   \end{level}
+% \end{kanjientries}
+
+% \KanjiGrid{亡,考,平,村}
+% \begin{kanjientries}
+%   \begin{level}{6}
+%     \kanjientry{亡}{\wkread{ボウ}·な}{Death}
+%   \end{level}
+%   \begin{level}{5}
+%     \kanjientry{考}{\wkread{コウ}·かんが}{Think}
+%   \end{level}
+%   \begin{level}{4}
+%     \kanjientry{平}{\wkread{ヘイ}·ヒョウ·ビョウ·たい·ひら}{Flat}
+%     \kanjientry{村}{ソン·\wkread{むら}}{Village}
+%   \end{level}
+% \end{kanjientries}
+
+% \finishonevenpage
+\end{document}
