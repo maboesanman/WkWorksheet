@@ -6,9 +6,13 @@ from lxml.etree import _ElementTree as ElementTree
 import sys
 from copy import deepcopy
 from pathlib import Path
+import re
+
+
 
 KANJIVG_DIR = Path("data/kanjivg/kanji")
 NS = {"svg": "http://www.w3.org/2000/svg"}
+MOVE_CMD = re.compile(r"[Mm]\s*([0-9.\-]+)[ ,]([0-9.\-]+)")
 
 def unicode_to_hex(kanji: str) -> str:
     """Convert single-character kanji to KanjiVG filename."""
@@ -146,6 +150,24 @@ def count_strokes(node: Element) -> int:
             total += count_strokes(child)
     return total
 
+
+def add_start_dots(svg_root):
+    for path in svg_root.xpath(".//svg:path", namespaces=NS):
+        d = path.get("d")
+        m = MOVE_CMD.match(d)
+        if not m:
+            continue
+        x, y = map(float, m.groups())
+
+        dot = etree.Element("{http://www.w3.org/2000/svg}circle")
+        dot.set("cx", str(x))
+        dot.set("cy", str(y))
+        dot.set("r", "1.5")  # adjust based on printer visibility
+        dot.set("fill", "black")
+        dot.set("stroke", "none")
+
+        path.addnext(dot)  # place after the path, so it draws on top
+
 def make_phase_svgs(tree, phase_starts, outdir: Path, kanji: str, num: int):
     """
     For each phase in `phase_starts`:
@@ -179,10 +201,28 @@ def make_phase_svgs(tree, phase_starts, outdir: Path, kanji: str, num: int):
                 hex_color = '#{0:02x}{0:02x}{0:02x}'.format(int(255 * grey_level))
                 p.set("stroke", hex_color)
 
-        # Remove numbers outside [start,end)
+        # Remove numbers
         for idx, t in enumerate(texts):
             if True:
                 t.getparent().remove(t)
+
+        # add dots to paths inside [start,end)
+        for idx, path in enumerate(paths):
+            if start <= idx and idx < end:
+                d = path.get("d")
+                m = MOVE_CMD.match(d)
+                if not m:
+                    continue
+                x, y = map(float, m.groups())
+
+                dot = etree.Element("{http://www.w3.org/2000/svg}circle")
+                dot.set("cx", str(x))
+                dot.set("cy", str(y))
+                dot.set("r", "5")  # adjust based on printer visibility
+                dot.set("fill", "black")
+                dot.set("stroke", "none")
+
+                path.addnext(dot)
         
         
 
