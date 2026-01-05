@@ -32,6 +32,7 @@
 
 \newcount\gridwidth
 \gridwidth=\numexpr\textwidth/\gridsize\relax
+\immediate\write16{KANJI_COUNT_PER_PAGE=\the\gridwidth}
 
 \newcount\gridheight
 \gridheight=\numexpr(\textheight-\wordbankminheight)/\gridsize\relax
@@ -52,7 +53,7 @@
 \newCJKfontfamily\Mincho{Noto Serif CJK JP}
 \newCJKfontfamily\Gothic{Noto Sans CJK JP}
 \newCJKfontfamily\Kaisho[
-  Path=../fonts/,          % folder containing your .ttf
+  Path=fonts/,          % folder containing your .ttf
   Extension=.ttf,       % file extension
   UprightFont=*         % load “MyKanjiFont.ttf” → replaces *
 ]{AiharaHudemojiKaisho_601}
@@ -338,31 +339,84 @@
   \textbf{#1}
 }
 
-
 \newcommand\finishonevenpage{%
   \clearpage\checkoddpage\ifoddpage\else\blankpage\fi}
 \newcommand\blankpage{\clearpage\mbox{}}% EMPTY EXTRA PAGE IF NEEDED
-\immediate\write16{KANJI_COUNT_PER_PAGE=\the\gridwidth}
+
+% \newcommand\leveluppage{
+  
+% }
+
+\ExplSyntaxOn
+
+\cs_new_protected:Npn \num_to_jp:n #1
+  {
+    \int_case:nnF {#1}
+      {
+        {0}{〇} {1}{一} {2}{二} {3}{三} {4}{四}
+        {5}{五} {6}{六} {7}{七} {8}{八} {9}{九}
+      } { }
+  }
+
+\cs_new_protected:Npn \arabic_to_japanese:n #1
+  {
+    \int_compare:nTF {#1 < 10}
+      { \num_to_jp:n {#1} }
+      {
+        \num_to_jp:n { \int_div_truncate:nn {#1} {10} }
+        十
+        \int_compare:nT { \int_mod:nn {#1} {10} > 0 }
+          { \num_to_jp:n { \int_mod:nn {#1} {10} } }
+      }
+  }
+
+% Declare variables
+\tl_new:N \g_wklevel_tl
+\tl_new:N \g_wklevel_kanji_tl
+
+% Set numeric level
+\tl_set:Nn \g_wklevel_tl {\WKLevel}
+
+% Compute kanji representation once
+\tl_set:Nx \g_wklevel_kanji_tl { \arabic_to_japanese:n { \g_wklevel_tl } }
+
+\ExplSyntaxOff
+\ExplSyntaxOn
+\NewDocumentCommand{\WKLevelKanji}{}{ \g_wklevel_kanji_tl }
+\ExplSyntaxOff
+
+% --- Command to insert Level Up page ---
+\newcommand{\LevelUpPage}{
+  \begin{tikzpicture}[x=\textwidth, y=\textheight]
+    \path[use as bounding box] (0, 0) rectangle (1, 1);
+    \node[anchor=center, align=center, text width=.8\textwidth] at (0.5, 0.53) {
+      {\fontsize{72pt}{72pt}\selectfont\Mincho \WKLevelKanji}
+    };
+  \end{tikzpicture}
+}
 
 \begin{document}
-  \null
-  \newpage
-  \KanjiGrid{}
-  \begin{kanjientries}{2}
-    \begin{level}{8}
-      \kanjientry{次}{\wkread{ジ}·シ·つぎ·つ}{Next}
-      \kanjientry{支}{\wkread{シ}·ささ}{Support}
-      \kanjientry{住}{\wkread{ジュウ}·す}{Dwell}
-      \kanjientry{医}{\wkread{イ}}{Medicine}
-      \kanjientry{対}{\wkread{タイ}}{Versus}
-      \kanjientry{局}{\wkread{キョク}}{Bureau}
-      \kanjientry{役}{\wkread{ヤク}·エキ}{Service}
-      \kanjientry{投}{\wkread{トウ}·な}{Throw}
-      \kanjientry{決}{\wkread{ケツ}·き}{Decide}
-      \kanjientry{究}{\wkread{キュウ}·きわ}{Research}
-      \kanjientry{身}{\wkread{シン}·み}{Somebody}
-    \end{level}
-  \end{kanjientries}
+  \LevelUpPage
+  % \WKLevelKanji
+  % \KanjiGrid{}
+  % \begin{kanjientries}{2}
+  %   \begin{level}{8}
+  %     \kanjientry{次}{\wkread{ジ}·シ·つぎ·つ}{Next}
+  %     \kanjientry{支}{\wkread{シ}·ささ}{Support}
+  %     \kanjientry{住}{\wkread{ジュウ}·す}{Dwell}
+  %     \kanjientry{医}{\wkread{イ}}{Medicine}
+  %     \kanjientry{対}{\wkread{タイ}}{Versus}
+  %     \kanjientry{局}{\wkread{キョク}}{Bureau}
+  %     \kanjientry{役}{\wkread{ヤク}·エキ}{Service}
+  %     \kanjientry{投}{\wkread{トウ}·な}{Throw}
+  %     \kanjientry{決}{\wkread{ケツ}·き}{Decide}
+  %     \kanjientry{究}{\wkread{キュウ}·きわ}{Research}
+  %     \kanjientry{身}{\wkread{シン}·み}{Somebody}
+  %     \kanjientry{決}{\wkread{ケツ}·き}{Decide}
+  %     \kanjientry{究}{\wkread{キュウ}·きわ}{Research}
+  %     \kanjientry{身}{\wkread{シン}·み}{Somebody}
+  %   \end{level}
+  % \end{kanjientries}
 
 % \KanjiGrid{森,朝,番,答,絵,買,道,間,雲,数,画,必,強,歩}
 % \begin{kanjientries}

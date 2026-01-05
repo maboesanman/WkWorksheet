@@ -182,7 +182,7 @@ def main():
 
     chunks = list(chunked(kanji_data, 14))
 
-    variables = ["\\newlength{\gridsize}", "\\newlength{\wordbankminheight}"]
+    variables = ["\\newlength{\\gridsize}", "\\newlength{\\wordbankminheight}"]
 
     user = get_user()
 
@@ -224,20 +224,34 @@ def main():
     document.append("\\end{document}")
 
     today = date.today().isoformat()
-    output_path = WORKING_DIR / f"kanji-practice-{today}.tex"
+    dated_tex_name = f"kanji-practice-{today}.tex"
+    dated_pdf_name = f"kanji-practice-{today}.pdf"
+    today_pdf_name = "kanji-practice-today.pdf"
+    dated_pdf_path = OUT_DIR / dated_pdf_name
+    today_pdf_path = OUT_DIR / today_pdf_name
 
-    with open(output_path, "w", encoding="utf-8") as f:
+    with open(WORKING_DIR / dated_tex_name, "w", encoding="utf-8") as f:
         f.write(variables)
         f.write(template)
         f.write("\n".join(document))
 
     subprocess.run(
-            ["xelatex", "-shell-escape", "-synctex=1", f"kanji-practice-{today}.tex"],
+            ["xelatex", "-shell-escape", "-synctex=1", dated_tex_name],
             cwd=WORKING_DIR,
             check=True
         )
+        
     
-    os.rename(WORKING_DIR / f"kanji-practice-{today}.pdf", OUT_DIR / f"kanji-practice-{today}.pdf")
+    os.rename(WORKING_DIR / dated_pdf_name, dated_pdf_path)
+
+    # Remove existing symlink/file if present
+    try:
+        today_pdf_path.unlink()
+    except FileNotFoundError:
+        pass
+
+    # Create relative symlink (preferred for Samba shares)
+    today_pdf_path.symlink_to(dated_pdf_name)
 
 if __name__ == "__main__":
     main()

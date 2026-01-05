@@ -6,4 +6,12 @@
       "extensions": ["james-yu.latex-workshop"]
     }
   }
+  // "mounts": [
+  //   "source=/run/host-services/ssh-auth.sock,target=/ssh-agent,type=bind",
+  //   "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly"
+  // ],
+  // "remoteEnv": {
+  //   "SSH_AUTH_SOCK": "/ssh-agent"
+  // },
+  // "postStartCommand": "sudo chown vscode:vscode /ssh-agent"
 }
