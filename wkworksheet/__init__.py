@@ -1,0 +1,1 @@
+"""WkWorksheet - WaniKani worksheet generator."""

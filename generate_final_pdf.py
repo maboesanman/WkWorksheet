@@ -13,6 +13,8 @@ HEADERS = {"Authorization": f"Bearer {API_TOKEN}"}
 TEMPLATE_PATH = Path("template.tex")
 WORKING_DIR = Path("working")
 WORKING_DIR.mkdir(parents=True, exist_ok=True)
+DAY_BY_DAY_DIR = WORKING_DIR / "day-by-day"
+
 OUT_DIR = Path("out")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 

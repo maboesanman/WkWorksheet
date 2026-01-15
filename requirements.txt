@@ -1,2 +1,5 @@
 lxml
 svgpathtools
+requests
+jupyter
+ipykernel

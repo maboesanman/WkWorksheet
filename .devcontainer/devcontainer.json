@@ -3,9 +3,13 @@
   "build": { "dockerfile": "../Dockerfile" },
   "customizations": {
     "vscode": {
-      "extensions": ["james-yu.latex-workshop"]
+      "extensions": [
+        "james-yu.latex-workshop",
+        "ms-toolsai.jupyter"
+      ]
     }
-  }
+  },
+  "postCreateCommand": "pip install --break-system-packages -r requirements.txt && python3 -m ipykernel install --user --name=wkworksheet --display-name='Python 3 (WkWorksheet)'"
   // "mounts": [
   //   "source=/run/host-services/ssh-auth.sock,target=/ssh-agent,type=bind",
   //   "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly"
