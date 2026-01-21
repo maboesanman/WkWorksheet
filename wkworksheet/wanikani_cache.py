@@ -413,26 +413,35 @@ class WaniKaniCache:
                 return review_stat
         return None
 
-    def fetch_user(self, force: bool = False) -> Dict[str, Any]:
+    def fetch_user(self) -> Dict[str, Any]:
         """
-        Fetch user information from WaniKani, using cache when possible.
-
-        Args:
-            force: If True, fetch user data regardless of cache state
+        Fetch user information from WaniKani, using If-Modified-Since for efficiency.
 
         Returns:
             User data
         """
-        if force or not self._cache_data["user"]["data"]:
+        last_updated = self._cache_data["user"]["last_updated"]
+
+        request_headers = {**self.headers}
+        if last_updated:
+            # Convert ISO timestamp to HTTP date format for If-Modified-Since
+            dt = datetime.fromisoformat(last_updated)
+            http_date = dt.strftime("%a, %d %b %Y %H:%M:%S GMT")
+            request_headers["If-Modified-Since"] = http_date
+            print(f"Fetching user information (if modified since {last_updated})...")
+        else:
             print("Fetching user information...")
-            response = requests.get(f"{API_URL}/user", headers=self.headers)
+
+        response = requests.get(f"{API_URL}/user", headers=request_headers)
+
+        if response.status_code == 304:
+            print("User information not modified")
+        else:
             response.raise_for_status()
             self._cache_data["user"]["data"] = response.json()
             self._cache_data["user"]["last_updated"] = datetime.now(timezone.utc).isoformat()
             self._save_cache()
             print("User information fetched")
-        else:
-            print("Using cached user information")
 
         return self._cache_data["user"]["data"]
 
@@ -444,6 +453,18 @@ class WaniKaniCache:
             User data or None if not cached
         """
         return self._cache_data["user"]["data"]
+
+    def get_last_updated(self) -> Optional[datetime]:
+        """
+        Get the last update time of the assignments cache.
+
+        Returns:
+            datetime object of last update, or None if never updated
+        """
+        last_updated = self._cache_data["assignments"]["last_updated"]
+        if last_updated:
+            return datetime.fromisoformat(last_updated)
+        return None
 
 
 def ensure_subjects_cached() -> WaniKaniCache:

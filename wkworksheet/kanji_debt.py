@@ -1,7 +1,17 @@
 import json
+import random
 import numpy as np
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from pathlib import Path
+
+
+def hiragana_to_katakana(text: str) -> str:
+    """Convert hiragana characters to katakana."""
+    # Hiragana range: U+3041 to U+3096, Katakana range: U+30A1 to U+30F6 (offset of 0x60)
+    return text.translate(str.maketrans(
+        'ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんゔ',
+        'ァアィイゥウェエォオカガキギクグケゲコゴサザシジスズセゼソゾタダチヂッツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモャヤュユョヨラリルレロヮワヰヱヲンヴ'
+    ))
 
 # Rolling average period for baseline accumulation tracking
 AVERAGING_PERIOD = timedelta(days=30)
@@ -34,8 +44,10 @@ def update_kanji_ledger(cache, ledger_path="kanji_ledger.json"):
         last_updated = None
         previous_baseline = None
 
-    # Calculate elapsed time since last update
-    now = datetime.now(timezone.utc)
+    # Use the cache's update time as the canonical timestamp
+    now = cache.get_last_updated()
+    if now is None:
+        raise ValueError("Cache has not been updated yet. Call cache.fetch_assignments() first.")
     if last_updated:
         elapsed = now - last_updated
     else:
@@ -133,19 +145,17 @@ def sample_kanji_ledger(ledger, elapsed, temperature=1.0):
 
     correction = (actual_debt - target_debt - amount_to_pay) * (1 - DECAY_FACTOR)
 
-    print("target debt", target_debt)
-    print("actual debt", actual_debt)
-    print("amount_to_pay", amount_to_pay)
-    print("correction", correction)
-
     # pay within 0.5 of the amount_to_pay + correction
     final_threshold = actual_debt - amount_to_pay - correction + 0.5
 
+    # Cap the number of kanji at 150% of a single day's debt (amortized for gaps)
+    max_kanji = round(ledger["baseline_accumulation"] * 1.5)
 
     print("final_threshold", final_threshold)
-    
-    # Keep sampling until total debt < 0.5
-    while sum(ledger["kanji"].values()) >= final_threshold:
+    print("max_kanji", max_kanji)
+
+    # Keep sampling until total debt < 0.5 or we hit the cap
+    while sum(ledger["kanji"].values()) >= final_threshold and len(sampled_kanji) < max_kanji:
         # Filter to non-negative values for sampling
         positive_kanji = {k: v for k, v in ledger["kanji"].items() if v > 0}
 
@@ -173,4 +183,105 @@ def sample_kanji_ledger(ledger, elapsed, temperature=1.0):
         ledger["kanji"][sampled_id] = min(current_value, 1) - 1
 
     return sorted(sampled_kanji)
-    
+
+
+def generate_kanji_selection_report(cache, ledger_path="kanji_ledger.json"):
+    """
+    Generate a kanji selection report grouped by level.
+
+    Calls update_kanji_ledger to get selected kanji, then pulls data from
+    the wanikani_cache and organizes by level (descending) with random ordering within levels.
+
+    Args:
+        cache: WaniKaniCache instance
+        ledger_path: Path to the kanji ledger JSON file
+
+    Returns:
+        dict: Report with structure {
+            "updated_at": ISO timestamp when ledger was updated,
+            "groups": [
+                {
+                    "groupName": "レベル１０",
+                    "kanji": [
+                        {
+                            "character": "重",
+                            "readings": [
+                                {"characters": "じゅう", "primary": true}
+                            ],
+                            "meaning": "Heavy"
+                        }
+                    ]
+                }
+            ]
+        }
+    """
+    # Get selected kanji subject IDs
+    selected_subject_ids = update_kanji_ledger(cache, ledger_path)
+
+    # Load the ledger to get the timestamp
+    ledger_file = Path(ledger_path)
+    with open(ledger_file, 'r') as f:
+        ledger = json.load(f)
+
+    updated_at = ledger["updated_at"]
+
+    # Group kanji by level
+    level_groups = {}
+
+    for subject_id_str in selected_subject_ids:
+        subject_id = int(subject_id_str)
+        subject = cache.get_subject_by_id(subject_id)
+
+        if not subject or subject.get("object") != "kanji":
+            continue
+
+        data = subject.get("data", {})
+        level = data.get("level")
+        character = data.get("characters")
+        meanings = data.get("meanings", [])
+        readings = data.get("readings", [])
+
+        # Get primary meaning
+        primary_meaning = next(
+            (m["meaning"] for m in meanings if m.get("primary")),
+            meanings[0]["meaning"] if meanings else ""
+        )
+
+        # Format readings (convert onyomi to katakana)
+        formatted_readings = [
+            {
+                "characters": hiragana_to_katakana(r["reading"]) if r.get("type") == "onyomi" else r["reading"],
+                "primary": r.get("primary", False)
+            }
+            for r in readings
+        ]
+
+        kanji_entry = {
+            "character": character,
+            "readings": formatted_readings,
+            "meaning": primary_meaning
+        }
+
+        if level not in level_groups:
+            level_groups[level] = []
+
+        level_groups[level].append(kanji_entry)
+
+    # Sort levels descending and randomize kanji within each level
+    groups = []
+    for level in sorted(level_groups.keys(), reverse=True):
+        kanji_list = level_groups[level]
+        random.shuffle(kanji_list)  # Randomize order within level
+
+        # Convert level to full-width digits
+        full_width_level = str(level).translate(str.maketrans('0123456789', '０１２３４５６７８９'))
+
+        groups.append({
+            "groupName": f"レベル{full_width_level}",
+            "kanji": kanji_list
+        })
+
+    return {
+        "updated_at": updated_at,
+        "groups": groups
+    }
