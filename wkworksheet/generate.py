@@ -2,6 +2,7 @@
 import json
 import os
 import subprocess
+import shutil
 from pathlib import Path
 
 from .config import WORKING_DIR, OUT_DIR, TEMPLATE_PATH
@@ -150,7 +151,7 @@ def generate_final_pdf():
     dst_pdf = OUT_DIR / dated_pdf_name
     today_pdf = OUT_DIR / today_pdf_name
 
-    os.rename(src_pdf, dst_pdf)
+    shutil.copy2(src_pdf, dst_pdf)
 
     # TODO: Embed JSON metadata (requires exiftool or alternative)
     # embed_json_metadata(dst_pdf, worksheet_data)
