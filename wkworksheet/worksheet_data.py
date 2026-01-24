@@ -89,6 +89,8 @@ def generate_worksheet_data() -> dict:
     # Generate kanji selection
     kanji_report = generate_kanji_selection_report(cache, KANJI_LEDGER_PATH)
 
+    print(kanji_report)
+
     # Build LaTeX variables and template for layout computation
     variables = LATEX_LENGTHS + "\n" + make_user_variables(user_info['level'], user_info['username'])
 

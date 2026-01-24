@@ -10,20 +10,24 @@ LATEX_LENGTHS = "\n".join([
 ])
 
 
-def make_user_variables(user_level, username):
+def make_user_variables(user_level, username, worksheet_date=None):
     """
     Generate LaTeX user variable definitions.
 
     Args:
         user_level: WaniKani user level (int)
         username: WaniKani username (str)
+        worksheet_date: Optional formatted date string for the worksheet header
 
     Returns:
         LaTeX string with user variable definitions
     """
+    # Use placeholder if no date provided (for layout computation)
+    date_str = worksheet_date if worksheet_date else "XXXX年XX月XX日（X）"
     return "\n".join([
         f"\\newcommand{{\\WKLevel}}{{{user_level}}}",
         f"\\newcommand{{\\WKUsername}}{{{username}}}",
+        f"\\newcommand{{\\WorksheetDate}}{{{date_str}}}",
     ])
 
 

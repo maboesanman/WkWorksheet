@@ -99,52 +99,34 @@ def batch_test_slices(variables, template, groups, slices_with_colskip):
         text=True
     )
 
-    # Parse the output to find page numbers for each slice
-    # Each slice reports its page number after rendering
-    # If slice N is on page P, and slice N+1 is on page P+1, then slice N fit on one page
-    # If slice N+1 is on page P+2 or more, then slice N overflowed
-
-    slice_pages = []  # List of ((start, end, colskip), page_number)
+    # Parse the output to find start/end page numbers for each slice
+    # START and END are on separate lines:
+    #   SLICE:0_8:COLSKIP:0:START:2
+    #   END:3
+    results = {}
+    pending = None  # (start, end, colskip, start_page)
 
     for line in result.stdout.splitlines():
         if line.startswith("SLICE:"):
-            # Parse: "SLICE:0_5:COLSKIP:0:PAGE:3"
-            match = re.search(r"SLICE:(\d+)_(\d+):COLSKIP:(\d+):PAGE:(\d+)", line)
+            match = re.search(
+                r"SLICE:(\d+)_(\d+):COLSKIP:(\d+):START:(\d+)",
+                line
+            )
             if match:
                 start = int(match.group(1))
                 end = int(match.group(2))
                 colskip = int(match.group(3))
-                page = int(match.group(4))
-                slice_pages.append(((start, end, colskip), page))
-
-    # Determine if each slice fit by comparing consecutive page numbers
-    # Each \testslice advances to an even page, then renders KanjiGrid + content.
-    # The reported page is where the content ENDED.
-    #
-    # Structure per test:
-    # - \null\newpage advances from page P to P+1
-    # - \ifodd check: if P+1 is odd, another \null\newpage to P+2 (even)
-    # - So content always starts on an even page
-    # - If content fits, it stays on that even page
-    # - If content overflows, it goes to an odd page (or further)
-    #
-    # First test: starts on page 1, \null\newpage -> page 2, which is even, content on page 2
-    # If fits: reports page 2. If overflows: reports page 3+.
-    #
-    # Subsequent tests: prev ended on page P
-    # - \null\newpage -> page P+1
-    # - If P+1 is odd, another \null\newpage -> page P+2 (even)
-    # - If P was even (content fit), P+1 is odd, so we go to P+2
-    # - If P was odd (content overflowed), P+1 is even, so we stay at P+1
-    #
-    # To check if slice i fit: its reported page should be even
-    results = {}
-
-    for (start, end, colskip), page in slice_pages:
-        # Content starts on an even page. If it fits, it ends on that same even page.
-        # If it overflows, it ends on an odd page (or further).
-        fits = (page % 2 == 0)
-        results[(start, end, colskip)] = fits
+                start_page = int(match.group(4))
+                pending = (start, end, colskip, start_page)
+        elif line.startswith("END:") and pending is not None:
+            match = re.search(r"END:(\d+)", line)
+            if match:
+                end_page = int(match.group(1))
+                start, end, colskip, start_page = pending
+                # Content overflows if END is on the next page after START
+                overflows = (start_page + 1 != end_page)
+                results[(start, end, colskip)] = overflows
+                pending = None
 
     return results
 

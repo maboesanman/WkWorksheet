@@ -188,7 +188,7 @@
 \fancyhead[C]{\scalebox{1.2}{\Mincho\textbf{漢字練習}}}
 
 \fancyhead[LO]{\scalebox{0.8}{\Mincho ブウマン·マソン}}
-\fancyhead[RO]{\scalebox{0.8}{\Gothic\DTMtoday}}
+\fancyhead[RO]{\scalebox{0.8}{\Gothic\WorksheetDate}}
 \fancyhead[LE]{\scalebox{0.8}{\Gothic ワニカニレベル\lookup{\DTMtwodigits{\WKLevel}}}}
 % \fancyhead[RE]{\scalebox{0.8}{\Sans \WKUsername}}
 \fancyfoot[C]{}
@@ -290,15 +290,18 @@
 \setlength{\columnsep}{8mm}
 
 % Command to test if a slice fits on one page
-% Renders the slice with an empty grid and reports the page count
+% Renders the slice with an empty grid and reports start/end page
 % Usage: \testslice{id}{colskip}{content}
 \newcommand{\testslice}[3]{%
   % Advance to next even page so colskip logic works correctly
   \null\newpage%
   \ifodd\value{page}\null\newpage\fi%
+  \edef\teststartpage{\thepage}%
   \KanjiGrid{}%
+  % \begin{testkanjientries}{#2}#3\end{testkanjientries}%
+  \typeout{SLICE:#1:COLSKIP:#2:START:\thepage}%
   \begin{kanjientries}{#2}#3\end{kanjientries}%
-  \typeout{SLICE:#1:COLSKIP:#2:PAGE:\thepage}%
+  \typeout{END:\thepage}%
 }
 
 \newenvironment{kanjientries}[1]{%
