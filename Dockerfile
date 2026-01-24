@@ -48,7 +48,8 @@ COPY requirements.txt /workspace/requirements.txt
 RUN pip install --no-cache-dir --break-system-packages -r /workspace/requirements.txt
 
 # Copy the application source
-COPY wkworksheet /workspace/wkworksheet
+COPY . /workspace
+
 
 # Create the cron job: run at 2am Chicago time every day
 # Output is logged to /var/log/wkworksheet.log
