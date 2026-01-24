@@ -1,6 +1,9 @@
 {
   "name": "Kanji LaTeX",
-  "build": { "dockerfile": "../Dockerfile" },
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "target": "base"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
