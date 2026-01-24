@@ -206,7 +206,7 @@ def generate_kanji_selection_report(cache, ledger_path="kanji_ledger.json"):
                         {
                             "character": "重",
                             "readings": [
-                                {"characters": "じゅう", "primary": true}
+                                {"characters": "ジュウ", "primary": true}
                             ],
                             "meaning": "Heavy"
                         }
@@ -273,8 +273,8 @@ def generate_kanji_selection_report(cache, ledger_path="kanji_ledger.json"):
         kanji_list = level_groups[level]
         random.shuffle(kanji_list)  # Randomize order within level
 
-        # Convert level to full-width digits
-        full_width_level = str(level).translate(str.maketrans('0123456789', '０１２３４５６７８９'))
+        # Convert level to full-width digits (zero-padded to 2 digits)
+        full_width_level = str(level).zfill(2).translate(str.maketrans('0123456789', '０１２３４５６７８９'))
 
         groups.append({
             "groupName": f"レベル{full_width_level}",

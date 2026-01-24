@@ -289,6 +289,18 @@
 
 \setlength{\columnsep}{8mm}
 
+% Command to test if a slice fits on one page
+% Renders the slice with an empty grid and reports the page count
+% Usage: \testslice{id}{colskip}{content}
+\newcommand{\testslice}[3]{%
+  % Advance to next even page so colskip logic works correctly
+  \null\newpage%
+  \ifodd\value{page}\null\newpage\fi%
+  \KanjiGrid{}%
+  \begin{kanjientries}{#2}#3\end{kanjientries}%
+  \typeout{SLICE:#1:COLSKIP:#2:PAGE:\thepage}%
+}
+
 \newenvironment{kanjientries}[1]{%
   \small
   \begin{multicols*}{3}
@@ -310,7 +322,7 @@
 
 \newenvironment{level}[1]{
   \Needspace{\dimexpr 2\baselineskip + \parskip\relax}
-  \mbox{\Gothic レベル\lookup{\DTMtwodigits{#1}}}%
+  \mbox{\Gothic #1}%
 
   \columnbreak[0]
   \begin{itemize}

@@ -3,9 +3,11 @@ import json
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from .config import KANJI_LEDGER_PATH
+from .config import KANJI_LEDGER_PATH, TEMPLATE_PATH
 from .wanikani_cache import WaniKaniCache
 from .kanji_debt import generate_kanji_selection_report
+from .layout import compute_all_rolling_windows, assign_pages
+from .latex_snippets import LATEX_LENGTHS, make_user_variables
 
 
 # Japanese day of week names
@@ -49,9 +51,14 @@ def generate_worksheet_data() -> dict:
                 "datetime": ISO timestamp,
                 "formatted": Japanese date string
             },
-            "kanji": {
-                "groups": [...] (from kanji selection report)
-            }
+            "pages": [
+                {
+                    "kanji": {
+                        "groups": [...],
+                        "required_legend_columns": int
+                    }
+                }
+            ]
         }
     """
     # Initialize and update cache
@@ -82,12 +89,23 @@ def generate_worksheet_data() -> dict:
     # Generate kanji selection
     kanji_report = generate_kanji_selection_report(cache, KANJI_LEDGER_PATH)
 
+    # Build LaTeX variables and template for layout computation
+    variables = LATEX_LENGTHS + "\n" + make_user_variables(user_info['level'], user_info['username'])
+
+    with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
+        template = f.read()
+
+    rolling_windows = compute_all_rolling_windows(variables, template, kanji_report["groups"])
+
+    print(rolling_windows)
+
+    # Assign kanji to pages using greedy algorithm
+    pages = assign_pages(kanji_report["groups"], rolling_windows)
+
     return {
         "user": user_info,
         "date": date_info,
-        "kanji": {
-            "groups": kanji_report["groups"]
-        }
+        "pages": pages
     }
 
 
