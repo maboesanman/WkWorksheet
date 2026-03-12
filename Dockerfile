@@ -45,7 +45,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Install Python dependencies
 COPY requirements.txt /workspace/requirements.txt
-RUN pip install --no-cache-dir --break-system-packages -r /workspace/requirements.txt
+RUN pip install --no-cache-dir --break-system-packages --ignore-installed -r /workspace/requirements.txt
 
 # Copy the application source
 COPY . /workspace
