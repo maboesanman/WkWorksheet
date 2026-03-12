@@ -7,7 +7,7 @@ from .config import KANJI_LEDGER_PATH, TEMPLATE_PATH
 from .wanikani_cache import WaniKaniCache
 from .kanji_debt import generate_kanji_selection_report
 from .layout import compute_all_rolling_windows, assign_pages
-from .latex_snippets import LATEX_LENGTHS, make_user_variables
+from .latex_snippets import PAGE_CONFIGS, make_latex_lengths, make_user_variables
 
 
 # Japanese day of week names
@@ -91,23 +91,33 @@ def generate_worksheet_data() -> dict:
 
     print(kanji_report)
 
-    # Build LaTeX variables and template for layout computation
-    variables = LATEX_LENGTHS + "\n" + make_user_variables(user_info['level'], user_info['username'])
-
+    # Read template once
     with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
         template = f.read()
 
-    rolling_windows = compute_all_rolling_windows(variables, template, kanji_report["groups"])
+    # Generate page layouts for each page size
+    page_size_data = {}
+    for page_size, page_config in PAGE_CONFIGS.items():
+        # Build LaTeX variables for this page config
+        variables = make_latex_lengths(page_config) + "\n" + make_user_variables(user_info['level'], user_info['username'])
+        numcolumns = page_config["numcolumns"]
 
-    print(rolling_windows)
+        rolling_windows, max_slice_size = compute_all_rolling_windows(variables, template, kanji_report["groups"], numcolumns)
 
-    # Assign kanji to pages using greedy algorithm
-    pages = assign_pages(kanji_report["groups"], rolling_windows)
+        print(f"{page_size} (max {max_slice_size} kanji/page): {rolling_windows}")
+
+        # Assign kanji to pages using greedy algorithm
+        pages = assign_pages(kanji_report["groups"], rolling_windows, numcolumns, max_slice_size)
+
+        page_size_data[page_size] = {
+            "page_config": page_config,
+            "pages": pages
+        }
 
     return {
         "user": user_info,
         "date": date_info,
-        "pages": pages
+        "page_sizes": page_size_data
     }
 
 

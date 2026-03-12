@@ -1,13 +1,53 @@
 """LaTeX snippet generation for kanji worksheets."""
 
 
-# LaTeX length configurations (constant)
-LATEX_LENGTHS = "\n".join([
-    "\\newlength{\\gridsize}",
-    "\\newlength{\\wordbankminheight}",
-    "\\setlength{\\gridsize}{11.5mm}",
-    "\\setlength{\\wordbankminheight}{40mm}",
-])
+# Page configuration presets
+PAGE_CONFIGS = {
+    "b5": {
+        "gridsize": "11.5mm",
+        "wordbankminheight": "40mm",
+        "paperW": "182mm",
+        "paperH": "257mm",
+        "numcolumns": 3,
+        "wordbankfontsize": "small",  # LaTeX font size command
+    },
+    "a5": {
+        "gridsize": "10.5mm",
+        "wordbankminheight": "40mm",
+        "paperW": "148mm",
+        "paperH": "210mm",
+        "numcolumns": 2,
+        "wordbankfontsize": "footnotesize",  # smaller than \small
+    },
+}
+
+
+def make_latex_lengths(page_config: dict) -> str:
+    """
+    Generate LaTeX length definitions from a page config.
+
+    Args:
+        page_config: Dict with gridsize, wordbankminheight, paperW, paperH, numcolumns
+
+    Returns:
+        LaTeX string with length and variable definitions
+    """
+    return "\n".join([
+        "\\newlength{\\gridsize}",
+        "\\newlength{\\wordbankminheight}",
+        "\\newlength{\\paperW}",
+        "\\newlength{\\paperH}",
+        f"\\setlength{{\\gridsize}}{{{page_config['gridsize']}}}",
+        f"\\setlength{{\\wordbankminheight}}{{{page_config['wordbankminheight']}}}",
+        f"\\setlength{{\\paperW}}{{{page_config['paperW']}}}",
+        f"\\setlength{{\\paperH}}{{{page_config['paperH']}}}",
+        f"\\newcommand{{\\numcolumns}}{{{page_config['numcolumns']}}}",
+        f"\\newcommand{{\\wordbankfontsize}}{{\\{page_config['wordbankfontsize']}}}",
+    ])
+
+
+# Legacy constant for backwards compatibility (uses B5 config)
+LATEX_LENGTHS = make_latex_lengths(PAGE_CONFIGS["b5"])
 
 
 def make_user_variables(user_level, username, worksheet_date=None):

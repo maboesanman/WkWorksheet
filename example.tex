@@ -1,13 +1,10 @@
-
-
-
 \newlength{\gridsize}
 \newlength{\wordbankminheight}
-
-\newcommand{\WKLevel}{8}
-\newcommand{\WKUsername}{maboesanman}
 \setlength{\gridsize}{11.5mm}
 \setlength{\wordbankminheight}{40mm}
+\newcommand{\WKLevel}{11}
+\newcommand{\WKUsername}{maboesanman}
+\newcommand{\WorksheetDate}{２０２６年１月２３日（金）}
 
 \documentclass[10pt, twoside]{article}
 \usepackage{geometry, fancyhdr, fontspec, xeCJK, xfp, graphicx, multicol, needspace}
@@ -32,7 +29,6 @@
 
 \newcount\gridwidth
 \gridwidth=\numexpr\textwidth/\gridsize\relax
-\immediate\write16{KANJI_COUNT_PER_PAGE=\the\gridwidth}
 
 \newcount\gridheight
 \gridheight=\numexpr(\textheight-\wordbankminheight)/\gridsize\relax
@@ -53,7 +49,7 @@
 \newCJKfontfamily\Mincho{Noto Serif CJK JP}
 \newCJKfontfamily\Gothic{Noto Sans CJK JP}
 \newCJKfontfamily\Kaisho[
-  Path=fonts/,          % folder containing your .ttf
+  Path=../fonts/,          % folder containing your .ttf
   Extension=.ttf,       % file extension
   UprightFont=*         % load “MyKanjiFont.ttf” → replaces *
 ]{AiharaHudemojiKaisho_601}
@@ -198,10 +194,10 @@
 \fancyhf{}  % clear all
 \fancyhead[C]{\scalebox{1.2}{\Mincho\textbf{漢字練習}}}
 
-\fancyhead[LO]{\scalebox{0.8}{\Mincho ブウマン·マソン}}
-\fancyhead[RO]{\scalebox{0.8}{\Gothic\DTMtoday}}
+\fancyhead[LO]{\scalebox{0.8}{\Mincho ボーマン・メイソン}}
+\fancyhead[RO]{\scalebox{0.8}{\Gothic\WorksheetDate}}
 \fancyhead[LE]{\scalebox{0.8}{\Gothic ワニカニレベル\lookup{\DTMtwodigits{\WKLevel}}}}
-\fancyhead[RE]{\scalebox{0.8}{\Sans \WKUsername}}
+% \fancyhead[RE]{\scalebox{0.8}{\Sans \WKUsername}}
 \fancyfoot[C]{}
 
 
@@ -300,6 +296,21 @@
 
 \setlength{\columnsep}{8mm}
 
+% Command to test if a slice fits on one page
+% Renders the slice with an empty grid and reports start/end page
+% Usage: \testslice{id}{colskip}{content}
+\newcommand{\testslice}[3]{%
+  % Advance to next even page so colskip logic works correctly
+  \null\newpage%
+  \ifodd\value{page}\null\newpage\fi%
+  \edef\teststartpage{\thepage}%
+  \KanjiGrid{}%
+  % \begin{testkanjientries}{#2}#3\end{testkanjientries}%
+  \typeout{SLICE:#1:COLSKIP:#2:START:\thepage}%
+  \begin{kanjientries}{#2}#3\end{kanjientries}%
+  \typeout{END:\thepage}%
+}
+
 \newenvironment{kanjientries}[1]{%
   \small
   \begin{multicols*}{3}
@@ -321,7 +332,7 @@
 
 \newenvironment{level}[1]{
   \Needspace{\dimexpr 2\baselineskip + \parskip\relax}
-  \mbox{\Gothic レベル\lookup{\DTMtwodigits{#1}}}%
+  \mbox{\Gothic #1}%
 
   \columnbreak[0]
   \begin{itemize}
@@ -339,122 +350,68 @@
   \textbf{#1}
 }
 
+
 \newcommand\finishonevenpage{%
   \clearpage\checkoddpage\ifoddpage\else\blankpage\fi}
 \newcommand\blankpage{\clearpage\mbox{}}% EMPTY EXTRA PAGE IF NEEDED
+\immediate\write16{KANJI_COUNT_PER_PAGE=\the\gridwidth}
 
-% \newcommand\leveluppage{
-  
-% }
-
-\ExplSyntaxOn
-
-\cs_new_protected:Npn \num_to_jp:n #1
-  {
-    \int_case:nnF {#1}
-      {
-        {0}{〇} {1}{一} {2}{二} {3}{三} {4}{四}
-        {5}{五} {6}{六} {7}{七} {8}{八} {9}{九}
-      } { }
-  }
-
-\cs_new_protected:Npn \arabic_to_japanese:n #1
-  {
-    \int_compare:nTF {#1 < 10}
-      { \num_to_jp:n {#1} }
-      {
-        \num_to_jp:n { \int_div_truncate:nn {#1} {10} }
-        十
-        \int_compare:nT { \int_mod:nn {#1} {10} > 0 }
-          { \num_to_jp:n { \int_mod:nn {#1} {10} } }
-      }
-  }
-
-% Declare variables
-\tl_new:N \g_wklevel_tl
-\tl_new:N \g_wklevel_kanji_tl
-
-% Set numeric level
-\tl_set:Nn \g_wklevel_tl {\WKLevel}
-
-% Compute kanji representation once
-\tl_set:Nx \g_wklevel_kanji_tl { \arabic_to_japanese:n { \g_wklevel_tl } }
-
-\ExplSyntaxOff
-\ExplSyntaxOn
-\NewDocumentCommand{\WKLevelKanji}{}{ \g_wklevel_kanji_tl }
-\ExplSyntaxOff
-
-% --- Command to insert Level Up page ---
-\newcommand{\LevelUpPage}{
-  \begin{tikzpicture}[x=\textwidth, y=\textheight]
-    \path[use as bounding box] (0, 0) rectangle (1, 1);
-    \node[anchor=center, align=center, text width=.8\textwidth] at (0.5, 0.53) {
-      {\fontsize{72pt}{72pt}\selectfont\Mincho \WKLevelKanji}
-    };
-  \end{tikzpicture}
-}
 
 \begin{document}
-  \LevelUpPage
-  % \WKLevelKanji
-  % \KanjiGrid{}
-  % \begin{kanjientries}{2}
-  %   \begin{level}{8}
-  %     \kanjientry{次}{\wkread{ジ}·シ·つぎ·つ}{Next}
-  %     \kanjientry{支}{\wkread{シ}·ささ}{Support}
-  %     \kanjientry{住}{\wkread{ジュウ}·す}{Dwell}
-  %     \kanjientry{医}{\wkread{イ}}{Medicine}
-  %     \kanjientry{対}{\wkread{タイ}}{Versus}
-  %     \kanjientry{局}{\wkread{キョク}}{Bureau}
-  %     \kanjientry{役}{\wkread{ヤク}·エキ}{Service}
-  %     \kanjientry{投}{\wkread{トウ}·な}{Throw}
-  %     \kanjientry{決}{\wkread{ケツ}·き}{Decide}
-  %     \kanjientry{究}{\wkread{キュウ}·きわ}{Research}
-  %     \kanjientry{身}{\wkread{シン}·み}{Somebody}
-  %     \kanjientry{決}{\wkread{ケツ}·き}{Decide}
-  %     \kanjientry{究}{\wkread{キュウ}·きわ}{Research}
-  %     \kanjientry{身}{\wkread{シン}·み}{Somebody}
-  %   \end{level}
-  % \end{kanjientries}
+\KanjiGrid{好,努,命,院,数,画,校,家,麦,夜}
+  \begin{kanjientries}{0}
+  \begin{level}{レベル１１}
+  \kanjientry{好}{\wkread{コウ}·す·この}{Like}
+  \kanjientry{努}{\wkread{ド}·つと}{Toil}
+  \kanjientry{命}{\wkread{メイ}·ミョウ·いのち}{Fate}
+  \end{level}
 
-% \KanjiGrid{森,朝,番,答,絵,買,道,間,雲,数,画,必,強,歩}
-% \begin{kanjientries}
-%   \begin{level}{8}
-%     \kanjientry{森}{シン·\wkread{もり}}{Forest}
-%     \kanjientry{朝}{チョウ·\wkread{あさ}}{Morning}
-%     \kanjientry{番}{\wkread{バン}·つが·つがい}{Number In A Series}
-%     \kanjientry{答}{トウ·\wkread{こた}}{Answer}
-%     \kanjientry{絵}{\wkread{エ}}{Picture}
-%     \kanjientry{買}{バイ·\wkread{か}}{Buy}
-%     \kanjientry{道}{\wkread{ドウ}·みち}{Road}
-%     \kanjientry{間}{\wkread{カン}·ケン·あいだ·ま}{Interval}
-%     \kanjientry{雲}{ウン·\wkread{くも}}{Cloud}
-%     \kanjientry{数}{\wkread{スウ}·かぞ·かず}{Count}
-%   \end{level}
-%   \begin{level}{7}
-%     \kanjientry{画}{\wkread{ガ}·カク}{Image}
-%     \kanjientry{必}{\wkread{ヒツ}·かなら}{Certain}
-%     \kanjientry{強}{\wkread{キョウ}·ゴウ·つよ}{Strong}
-%   \end{level}
-%   \begin{level}{6}
-%     \kanjientry{歩}{\wkread{ホ}·ある·あゆ}{Walk}
-%   \end{level}
-% \end{kanjientries}
+  \begin{level}{レベル１０}
+  \kanjientry{院}{\wkread{イン}}{Institution}
+  \end{level}
 
-% \KanjiGrid{亡,考,平,村}
-% \begin{kanjientries}
-%   \begin{level}{6}
-%     \kanjientry{亡}{\wkread{ボウ}·な}{Death}
-%   \end{level}
-%   \begin{level}{5}
-%     \kanjientry{考}{\wkread{コウ}·かんが}{Think}
-%   \end{level}
-%   \begin{level}{4}
-%     \kanjientry{平}{\wkread{ヘイ}·ヒョウ·ビョウ·たい·ひら}{Flat}
-%     \kanjientry{村}{ソン·\wkread{むら}}{Village}
-%   \end{level}
-% \end{kanjientries}
+  \begin{level}{レベル０８}
+  \kanjientry{数}{\wkread{スウ}·かぞ·かず}{Count}
+  \end{level}
 
-% \finishonevenpage
+  \begin{level}{レベル０７}
+  \kanjientry{画}{\wkread{ガ}·カク}{Image}
+  \kanjientry{校}{\wkread{コウ}}{School}
+  \end{level}
+
+  \begin{level}{レベル０６}
+  \kanjientry{家}{\wkread{いえ}·や·うち·カ·ケ}{House}
+  \end{level}
+
+  \begin{level}{レベル０５}
+  \kanjientry{麦}{\wkread{むぎ}·バク}{Wheat}
+  \kanjientry{夜}{\wkread{よる}·よ·ヤ}{Night}
+  \end{level}
+
+  \end{kanjientries}
+
+\KanjiGrid{名,主,明,午,四,水,上}
+  \begin{kanjientries}{0}
+  \begin{level}{レベル０４}
+  \kanjientry{名}{\wkread{メイ}·ミョウ·な}{Name}
+  \kanjientry{主}{\wkread{シュ}·おも·ぬし·あるじ}{Master}
+  \end{level}
+
+  \begin{level}{レベル０３}
+  \kanjientry{明}{\wkread{あ}·メイ·ミョウ·あか·あき}{Bright}
+  \kanjientry{午}{\wkread{ゴ}}{Noon}
+  \end{level}
+
+  \begin{level}{レベル０２}
+  \kanjientry{四}{\wkread{シ}·よん·よ}{Four}
+  \kanjientry{水}{\wkread{スイ}·みず}{Water}
+  \end{level}
+
+  \begin{level}{レベル０１}
+  \kanjientry{上}{\wkread{ジョウ}·うえ·あ·のぼ·うわ·かみ}{Above}
+  \end{level}
+
+  \end{kanjientries}
+
+\finishonevenpage
 \end{document}
